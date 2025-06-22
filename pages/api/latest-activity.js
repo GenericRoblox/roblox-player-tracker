@@ -8,9 +8,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Step 1: Get user's latest badge
     const badgeRes = await axios.get(
-      `https://badges.roblox.com/v1/users/${userId}/badges?sortOrder=Desc&limit=10`,
+      `https://badges.roblox.com/v1/users/${userId}/badges?sortOrder=Desc&limit=100`,
       {
         headers: {
           'User-Agent': 'Mozilla/5.0',
@@ -18,14 +17,19 @@ export default async function handler(req, res) {
       }
     );
 
-    const latestBadge = badgeRes.data.data[0];
+    const badges = badgeRes.data.data;
 
-    if (!latestBadge || !latestBadge.awardingUniverse?.id) {
-      return res.status(404).json({ error: "No recent badge or game found" });
+    // ✅ Look for the first badge with a valid awardingUniverse
+    const validBadge = badges.find(b => b.awardingUniverse?.id);
+
+    if (!validBadge) {
+      return res.status(404).json({
+        error: "This user has recent badges, but none are linked to a game. Try another user."
+      });
     }
 
-    // Step 2: Get game info from badge's awarding universe
-    const gameId = latestBadge.awardingUniverse.id;
+    const gameId = validBadge.awardingUniverse.id;
+
     const gameInfo = await axios.get(
       `https://games.roblox.com/v1/games?universeIds=${gameId}`,
       {
@@ -38,19 +42,19 @@ export default async function handler(req, res) {
     const game = gameInfo.data.data[0];
 
     if (!game) {
-      return res.status(404).json({ error: "Game not found for universe" });
+      return res.status(404).json({ error: "Game not found for badge universe" });
     }
 
-    // Step 3: Respond with badge + game info
     res.status(200).json({
       userId,
-      latestBadge: latestBadge.name,
-      badgeAwardedAt: latestBadge.awardedDate,
+      latestBadge: validBadge.name,
+      badgeAwardedAt: validBadge.awardedDate,
       gameName: game.name,
-      gameLink: `https://www.roblox.com/games/${game.rootPlaceId}`,
+      gameLink: `https://www.roblox.com/games/${game.rootPlaceId}`
     });
+
   } catch (err) {
     console.error("Fetch error:", err.message);
-    res.status(500).json({ error: "Failed to fetch Roblox data VERSION 2" });
+    res.status(500).json({ error: "Failed to fetch Roblox data" });
   }
 }
