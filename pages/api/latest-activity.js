@@ -51,6 +51,6 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error("Fetch error:", err.message);
-    res.status(500).json({ error: "Failed to fetch Roblox data" });
+    res.status(500).json({ error: "Failed to fetch Roblox data VERSION 2" });
   }
 }
