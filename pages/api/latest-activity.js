@@ -18,20 +18,18 @@ export default async function handler(req, res) {
     );
 
     const badges = badgeRes.data.data;
-    const validBadge = badges.find(b => b.awardingUniverse?.id);
+    const validBadge = badges.find(b => b.awarder?.type === "Place" && b.awarder?.id);
 
     if (!validBadge) {
       return res.status(404).json({
-        error: "This user has recent badges, but none are linked to a game. Try another user."
+        error: "No recent badges tied to a place/game found."
       });
     }
 
-    const gameId = validBadge.awardingUniverse.id;
-    console.log("Found valid badge:", validBadge.name);
-    console.log("Game ID from badge:", gameId);
+    const placeId = validBadge.awarder.id;
 
-    const gameInfo = await axios.get(
-      `https://games.roblox.com/v1/games?universeIds=${gameId}`,
+    const placeInfo = await axios.get(
+      `https://games.roblox.com/v1/games/multiget-place-details?placeIds=${placeId}`,
       {
         headers: {
           'User-Agent': 'Mozilla/5.0',
@@ -39,19 +37,18 @@ export default async function handler(req, res) {
       }
     );
 
-    const game = gameInfo.data.data[0];
-    console.log("Fetched game info:", game);
+    const place = placeInfo.data[0];
 
-    if (!game) {
-      return res.status(404).json({ error: "Game not found for badge universe" });
+    if (!place) {
+      return res.status(404).json({ error: "Place not found for badge" });
     }
 
     res.status(200).json({
       userId,
       latestBadge: validBadge.name,
       badgeAwardedAt: validBadge.awardedDate,
-      gameName: game.name,
-      gameLink: `https://www.roblox.com/games/${game.rootPlaceId}`
+      gameName: place.name,
+      gameLink: `https://www.roblox.com/games/${place.placeId}`
     });
 
   } catch (err) {
