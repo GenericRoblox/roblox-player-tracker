@@ -18,8 +18,6 @@ export default async function handler(req, res) {
     );
 
     const badges = badgeRes.data.data;
-
-    // ✅ Look for the first badge with a valid awardingUniverse
     const validBadge = badges.find(b => b.awardingUniverse?.id);
 
     if (!validBadge) {
@@ -29,6 +27,8 @@ export default async function handler(req, res) {
     }
 
     const gameId = validBadge.awardingUniverse.id;
+    console.log("Found valid badge:", validBadge.name);
+    console.log("Game ID from badge:", gameId);
 
     const gameInfo = await axios.get(
       `https://games.roblox.com/v1/games?universeIds=${gameId}`,
@@ -40,6 +40,7 @@ export default async function handler(req, res) {
     );
 
     const game = gameInfo.data.data[0];
+    console.log("Fetched game info:", game);
 
     if (!game) {
       return res.status(404).json({ error: "Game not found for badge universe" });
