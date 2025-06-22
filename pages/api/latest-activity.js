@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   try {
     // Step 1: Get user's latest badge
     const badgeRes = await axios.get(
-      `https://badges.roblox.com/v1/users/${userId}/badges?sortOrder=Desc&limit=5`,
+      `https://badges.roblox.com/v1/users/${userId}/badges?sortOrder=Desc&limit=10`,
       {
         headers: {
           'User-Agent': 'Mozilla/5.0',
